@@ -82,6 +82,7 @@
       overflow: hidden;
     }
 
+    /* Rounded delete button matching card border-radius */
     .delete-swipe-btn {
       position: absolute;
       right: 0;
@@ -97,6 +98,8 @@
       font-size: 15px;
       border: none;
       cursor: pointer;
+      border-top-right-radius: 16px;
+      border-bottom-right-radius: 16px;
     }
 
     .card {
@@ -353,7 +356,7 @@
         wrapper.className = 'swipe-container';
 
         wrapper.innerHTML = `
-          <button class="delete-swipe-btn" onclick="deletePerson(${index})">Elimina</button>
+          <button class="delete-swipe-btn" onclick="confirmAndDelete(${index})">Elimina</button>
           <div class="card" id="card-${index}">
             <div class="info">
               <div class="name">${person.name} ${person.surname}</div>
@@ -462,6 +465,15 @@
       renderList();
     }
 
+    function confirmAndDelete(index) {
+      const personName = people[index].name;
+      if (confirm(`Sei sicuro di voler eliminare ${personName}?`)) {
+        deletePerson(index);
+      } else {
+        renderList(); // Reset swipe position if cancelled
+      }
+    }
+
     function deletePerson(index) {
       people.splice(index, 1);
       localStorage.setItem('age_tracker_db', JSON.stringify(people));
@@ -470,7 +482,7 @@
 
     function deleteFromModal() {
       if (currentEditIndex !== null) {
-        deletePerson(currentEditIndex);
+        confirmAndDelete(currentEditIndex);
         closeModal();
       }
     }
@@ -485,7 +497,7 @@
 
     function deleteFromContext() {
       if (contextIndex !== null) {
-        deletePerson(contextIndex);
+        confirmAndDelete(contextIndex);
         document.getElementById('contextMenu').style.display = 'none';
       }
     }
