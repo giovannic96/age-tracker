@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Age Tracker</title>
+
+  <!-- iOS PWA Settings -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Age Tracker">
+  
+  <style>
+    :root {
+      --primary: #6200ee;
+      --primary-variant: #3700b3;
+      --bg: #f5f5f5;
+      --card-bg: #ffffff;
+      --text: #000000;
+      --subtext: #666666;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 16px 20px;
+      font-size: 20px;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    main {
+      padding: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    }
+
+    .info .name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .info .details {
+      font-size: 14px;
+      color: var(--subtext);
+    }
+
+    .age-badge {
+      font-size: 22px;
+      font-weight: bold;
+      color: var(--primary);
+      text-align: right;
+    }
+
+    .age-label {
+      font-size: 12px;
+      color: var(--subtext);
+      text-transform: uppercase;
+    }
+
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background-color: var(--primary);
+      color: white;
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 28px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      cursor: pointer;
+      border: none;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      width: 85%;
+      max-width: 400px;
+    }
+
+    .modal-content h3 {
+      margin-top: 0;
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--subtext);
+      margin-bottom: 4px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .btn-text {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Age Tracker</header>
+
+  <main id="peopleList"></main>
+
+  <button class="fab" onclick="openModal()">+</button>
+
+  <div class="modal" id="dialog">
+    <div class="modal-content">
+      <h3>Aggiungi Persona</h3>
+      <div class="input-group">
+        <label>Nome</label>
+        <input type="text" id="nameInput">
+      </div>
+      <div class="input-group">
+        <label>Cognome</label>
+        <input type="text" id="surnameInput">
+      </div>
+      <div class="input-group">
+        <label>Data di Nascita</label>
+        <input type="date" id="dobInput">
+      </div>
+      <div class="actions">
+        <button class="btn-text" onclick="closeModal()">ANNULLA</button>
+        <button class="btn-text" onclick="savePerson()">SALVA</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let people = JSON.parse(localStorage.getItem('age_tracker_db') || '[]');
+
+    // Calculate age avoiding UTC timezone offset issues
+    function calculateAge(dobString) {
+      if (!dobString) return 0;
+
+      const [birthYear, birthMonth, birthDay] = dobString.split('-').map(Number);
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth() + 1;
+      const currentDay = today.getDate();
+
+      let age = currentYear - birthYear;
+
+      if (currentMonth < birthMonth || (currentMonth === birthMonth && currentDay < birthDay)) {
+        age--;
+      }
+
+      return age;
+    }
+
+    function renderList() {
+      const container = document.getElementById('peopleList');
+      container.innerHTML = '';
+
+      if (people.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#888; margin-top:40px;">Nessuna persona inserita.<br>Tocca + per iniziare!</p>';
+        return;
+      }
+
+      // Sort by birthdate descending (youngest person first)
+      people.sort((a, b) => b.birthdate.localeCompare(a.birthdate));
+
+      people.forEach((person, index) => {
+        const age = calculateAge(person.birthdate);
+
+        // Parse date manually to construct local Date object safely
+        const [y, m, d] = person.birthdate.split('-').map(Number);
+        const localDate = new Date(y, m - 1, d);
+        
+        const formattedDate = localDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const dayOfWeek = localDate.toLocaleDateString('it-IT', { weekday: 'long' });
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.onclick = () => deletePerson(index);
+        card.innerHTML = `
+          <div class="info">
+            <div class="name">${person.name} ${person.surname}</div>
+            <div class="details">${formattedDate} (${dayOfWeek})</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="age-badge">${age}</div>
+            <div class="age-label">anni</div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openModal() {
+      document.getElementById('dialog').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('dialog').style.display = 'none';
+      document.getElementById('nameInput').value = '';
+      document.getElementById('surnameInput').value = '';
+      document.getElementById('dobInput').value = '';
+    }
+
+    function savePerson() {
+      const name = document.getElementById('nameInput').value.trim();
+      const surname = document.getElementById('surnameInput').value.trim();
+      const birthdate = document.getElementById('dobInput').value;
+
+      if (!name || !birthdate) {
+        alert('Inserisci almeno Nome e Data!');
+        return;
+      }
+
+      people.push({ name, surname, birthdate });
+      localStorage.setItem('age_tracker_db', JSON.stringify(people));
+      closeModal();
+      renderList();
+    }
+
+    function deletePerson(index) {
+      if (confirm(`Vuoi eliminare ${people[index].name}?`)) {
+        people.splice(index, 1);
+        localStorage.setItem('age_tracker_db', JSON.stringify(people));
+        renderList();
+      }
+    }
+
+    renderList();
+  </script>
+</body>
+</html>
