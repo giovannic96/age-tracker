@@ -9,9 +9,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Age Tracker">
-
-  <!-- Swiper CSS for iOS-like swipe behavior -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
   
   <style>
     :root {
@@ -78,8 +75,7 @@
       margin: 0 auto;
     }
 
-    /* Outer wrapper preserving rounded iOS corners during swipe */
-    .swiper-container-wrapper {
+    .swipe-container {
       position: relative;
       margin-bottom: 12px;
       border-radius: 16px;
@@ -87,24 +83,40 @@
       background-color: var(--ios-red);
     }
 
-    .swiper {
-      width: 100%;
-      height: 100%;
-      border-radius: 16px;
+    .delete-swipe-btn {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 90px;
+      background-color: var(--ios-red);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 600;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      border-top-right-radius: 16px;
+      border-bottom-right-radius: 16px;
     }
 
-    .swiper-slide {
+    .card {
+      position: relative;
       background: var(--ios-card-bg);
+      border-radius: 16px;
+      padding: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-      transition: background-color 0.1s ease;
-      border-radius: 16px;
+      transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.1s ease;
+      z-index: 2;
+      touch-action: pan-y;
     }
 
-    .swiper-slide:active {
+    .card.active {
       background-color: var(--ios-card-active);
     }
 
@@ -135,27 +147,6 @@
       text-transform: uppercase;
       font-weight: 500;
       letter-spacing: 0.5px;
-    }
-
-    /* Absolute swipe action button behind the main content slide */
-    .delete-action-btn {
-      position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      width: 90px;
-      background-color: var(--ios-red);
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: 600;
-      font-size: 15px;
-      border: none;
-      cursor: pointer;
-      z-index: 1;
-      border-top-right-radius: 16px;
-      border-bottom-right-radius: 16px;
     }
 
     .modal-overlay {
@@ -325,13 +316,12 @@
     </div>
   </div>
 
-  <!-- Swiper JS CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <!-- Hammer.js for reliable iOS touch gestures -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
   <script>
     let people = JSON.parse(localStorage.getItem('age_tracker_db') || '[]');
     let currentEditIndex = null;
     let contextIndex = null;
-    let pressTimer = null;
 
     // Calculate age avoiding UTC offset issues
     function calculateAge(dobString) {
@@ -365,58 +355,76 @@
         const dayOfWeek = localDate.toLocaleDateString('it-IT', { weekday: 'long' });
 
         const wrapper = document.createElement('div');
-        wrapper.className = 'swiper-container-wrapper';
+        wrapper.className = 'swipe-container';
 
         wrapper.innerHTML = `
-          <button class="delete-action-btn" onclick="confirmAndDelete(${index})">Elimina</button>
-          <div class="swiper swiper-${index}">
-            <div class="swiper-wrapper">
-              <div class="swiper-slide">
-                <div class="info">
-                  <div class="name">${person.name} ${person.surname}</div>
-                  <div class="details">${formattedDate} (${dayOfWeek})</div>
-                </div>
-                <div style="text-align: right;">
-                  <div class="age-badge">${age}</div>
-                  <div class="age-label">anni</div>
-                </div>
-              </div>
+          <button class="delete-swipe-btn" onclick="confirmAndDelete(${index})">Elimina</button>
+          <div class="card" id="card-${index}">
+            <div class="info">
+              <div class="name">${person.name} ${person.surname}</div>
+              <div class="details">${formattedDate} (${dayOfWeek})</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="age-badge">${age}</div>
+              <div class="age-label">anni</div>
             </div>
           </div>
         `;
 
         container.appendChild(wrapper);
-
-        // Initialize Swiper instance for smooth iOS sliding physics
-        const swiperInstance = new Swiper(`.swiper-${index}`, {
-          resistanceRatio: 0.65,
-          slidesOffsetAfter: 0,
-          touchAngle: 45
-        });
-
-        const slide = wrapper.querySelector('.swiper-slide');
-        setupLongPressAndTap(slide, index, swiperInstance);
+        setupHammerGestures(wrapper.querySelector('.card'), index);
       });
     }
 
-    // Handles tap and long press while leaving horizontal scroll to Swiper
-    function setupLongPressAndTap(slide, index, swiperInstance) {
-      slide.addEventListener('touchstart', (e) => {
-        pressTimer = setTimeout(() => {
-          showContextMenu(e.touches[0].clientX, e.touches[0].clientY, index);
-        }, 500);
-      }, { passive: true });
+    // Handles tap, long-press, and iOS swipe mechanics via Hammer.js
+    function setupHammerGestures(card, index) {
+      const mc = new Hammer.Manager(card);
+      
+      const Pan = new Hammer.Pan({ direction: Hammer.DIRECTION_HORIZONTAL, threshold: 10 });
+      const Tap = new Hammer.Tap({ event: 'singletap' });
+      const Press = new Hammer.Press({ time: 500 });
 
-      slide.addEventListener('touchmove', () => {
-        clearTimeout(pressTimer);
-      }, { passive: true });
+      mc.add([Pan, Tap, Press]);
 
-      slide.addEventListener('touchend', (e) => {
-        clearTimeout(pressTimer);
-        // If swiper didn't move horizontally, open modal
-        if (Math.abs(swiperInstance.touches.diff) < 10) {
+      let isOpen = false;
+
+      // Real-time horizontal pan (swipe) tracking
+      mc.on('panmove', (e) => {
+        let deltaX = e.deltaX;
+        if (isOpen) deltaX -= 90;
+
+        // Restrict drag boundaries to avoid overflow
+        if (deltaX < 0 && deltaX > -120) {
+          card.style.transition = 'none';
+          card.style.transform = `translateX(${deltaX}px)`;
+        }
+      });
+
+      // Snap action on pan end
+      mc.on('panend', (e) => {
+        card.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+        if (e.deltaX < -45) {
+          card.style.transform = 'translateX(-90px)';
+          isOpen = true;
+        } else {
+          card.style.transform = 'translateX(0px)';
+          isOpen = false;
+        }
+      });
+
+      // Tap to edit card
+      mc.on('singletap', () => {
+        if (isOpen) {
+          card.style.transform = 'translateX(0px)';
+          isOpen = false;
+        } else {
           openModal(index);
         }
+      });
+
+      // Long press for Context Menu
+      mc.on('press', (e) => {
+        showContextMenu(e.center.x, e.center.y, index);
       });
     }
 
