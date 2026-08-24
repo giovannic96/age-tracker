@@ -345,7 +345,7 @@
       });
     }
 
-    // Handles tap, long-press, and swipe gestures via Hammer.js
+    // Handles swipe and long-press gestures via Hammer.js
     function setupHammerGestures(card, index) {
       const mc = new Hammer.Manager(card);
       
@@ -380,17 +380,15 @@
         }
       });
 
-      // Single tap: resets open swipe position or opens edit modal
+      // Single tap: closes swipe if open, ignores standard click otherwise
       mc.on('singletap', () => {
         if (isOpen) {
           card.style.transform = 'translateX(0px)';
           isOpen = false;
-        } else {
-          openModal(index);
         }
       });
 
-      // Long press: opens edit modal directly
+      // Long press exclusively opens edit modal
       mc.on('press', () => {
         if (isOpen) {
           card.style.transform = 'translateX(0px)';
