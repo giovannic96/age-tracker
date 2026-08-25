@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Age Tracker</title>
 
+  <!-- Favicon & iOS App Icon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎂</text></svg>">
+  <link rel="apple-touch-icon" href="https://fav.farm/🎂">
+
   <!-- iOS PWA Settings -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -72,7 +76,6 @@
       margin: 0;
     }
 
-    /* iOS Glass Circle Plus Button */
     .add-btn-circle {
       width: 40px;
       height: 40px;
@@ -100,7 +103,6 @@
       stroke-linecap: round;
     }
 
-    /* iOS Spring Tap Animation */
     .add-btn-circle:active {
       transform: scale(0.92);
       background: var(--ios-card-active);
@@ -244,7 +246,6 @@
       text-align: center;
     }
 
-    /* Modals & Action Sheet Overlay */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -355,7 +356,6 @@
       margin-top: 10px;
     }
 
-    /* Action Sheet Modal Style */
     .action-sheet-container {
       max-width: 600px;
       width: 100%;
