@@ -102,6 +102,7 @@
       background-color: var(--ios-card-active);
     }
 
+    /* Fixed persistent delete action */
     .delete-action {
       position: absolute;
       right: 0;
@@ -110,7 +111,7 @@
       width: 85px;
       background-color: var(--ios-red);
       color: white;
-      display: none;
+      display: flex;
       justify-content: center;
       align-items: center;
       font-weight: 600;
@@ -119,10 +120,6 @@
       cursor: pointer;
       border-radius: 16px;
       z-index: 1;
-    }
-
-    .delete-action.visible {
-      display: flex;
     }
 
     .info .name {
@@ -306,7 +303,7 @@
   <script>
     let people = JSON.parse(localStorage.getItem('age_tracker_db') || '[]');
     let currentEditIndex = null;
-    let activeOpenCard = null; // Tracks currently swiped open card
+    let activeOpenContent = null;
 
     function calculateAge(dobString) {
       if (!dobString) return 0;
@@ -320,20 +317,18 @@
     }
 
     function closeActiveSwipe() {
-      if (activeOpenCard) {
-        const { content, deleteBtn } = activeOpenCard;
-        content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
-        content.style.transform = 'translateX(0px)';
-        content.classList.remove('swiped');
-        setTimeout(() => deleteBtn.classList.remove('visible'), 250);
-        activeOpenCard = null;
+      if (activeOpenContent) {
+        activeOpenContent.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
+        activeOpenContent.style.transform = 'translateX(0px)';
+        activeOpenContent.classList.remove('swiped');
+        activeOpenContent = null;
       }
     }
 
     function renderList() {
       const container = document.getElementById('peopleList');
       container.innerHTML = '';
-      activeOpenCard = null;
+      activeOpenContent = null;
 
       if (people.length === 0) {
         container.innerHTML = '<p style="text-align:center; color:var(--ios-subtext); margin-top:60px;">Nessuna persona inserita.<br>Tocca + in alto per aggiungere.</p>';
@@ -353,7 +348,7 @@
         card.className = 'card';
 
         card.innerHTML = `
-          <button class="delete-action" id="delete-btn-${index}" onclick="confirmAndDelete(${index})">Elimina</button>
+          <button class="delete-action" onclick="confirmAndDelete(${index})">Elimina</button>
           <div class="card-content" id="content-${index}">
             <div class="info">
               <div class="name">${person.name} ${person.surname}</div>
@@ -373,7 +368,6 @@
 
     function setupHammerGestures(content, index) {
       const mc = new Hammer.Manager(content);
-      const deleteBtn = document.getElementById(`delete-btn-${index}`);
       
       const Pan = new Hammer.Pan({ direction: Hammer.DIRECTION_HORIZONTAL, threshold: 10 });
       const Tap = new Hammer.Tap({ event: 'singletap' });
@@ -390,8 +384,7 @@
       content.addEventListener('touchcancel', () => content.classList.remove('active'), { passive: true });
 
       mc.on('panstart', () => {
-        // Automatically close any previously swiped card
-        if (activeOpenCard && activeOpenCard.content !== content) {
+        if (activeOpenContent && activeOpenContent !== content) {
           closeActiveSwipe();
         }
       });
@@ -401,7 +394,6 @@
         if (isOpen) deltaX -= 90;
 
         if (deltaX < 0 && deltaX > -120) {
-          deleteBtn.classList.add('visible');
           content.style.transition = 'none';
           content.style.transform = `translateX(${deltaX}px)`;
         }
@@ -413,15 +405,14 @@
           content.style.transform = 'translateX(-90px)';
           content.classList.add('swiped');
           isOpen = true;
-          activeOpenCard = { content, deleteBtn, index };
+          activeOpenContent = content;
         } else {
           content.style.transform = 'translateX(0px)';
           content.classList.remove('swiped');
           isOpen = false;
-          if (activeOpenCard && activeOpenCard.content === content) {
-            activeOpenCard = null;
+          if (activeOpenContent === content) {
+            activeOpenContent = null;
           }
-          setTimeout(() => deleteBtn.classList.remove('visible'), 250);
         }
       });
 
@@ -429,7 +420,7 @@
         if (isOpen) {
           closeActiveSwipe();
           isOpen = false;
-        } else if (activeOpenCard) {
+        } else if (activeOpenContent) {
           closeActiveSwipe();
         }
       });
