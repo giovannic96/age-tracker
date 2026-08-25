@@ -121,10 +121,10 @@
       letter-spacing: -0.5px;
     }
 
-    /* iOS Native Red Circle + Label Delete Action */
+    /* Bigger Red Circle Action Button closely aligned to the card */
     .delete-action-wrapper {
       position: absolute;
-      right: 18px;
+      right: 8px;
       top: 50%;
       transform: translateY(-50%);
       display: flex;
@@ -139,20 +139,20 @@
     }
 
     .delete-circle-btn {
-      width: 44px;
-      height: 44px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       background-color: var(--ios-red);
       display: flex;
       justify-content: center;
       align-items: center;
-      box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
-      margin-bottom: 4px;
+      box-shadow: 0 3px 10px rgba(255, 59, 48, 0.35);
+      margin-bottom: 3px;
     }
 
     .delete-circle-btn svg {
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       fill: white;
     }
 
@@ -451,9 +451,9 @@
 
       mc.on('panmove', (e) => {
         let deltaX = e.deltaX;
-        if (isOpen) deltaX -= 85;
+        if (isOpen) deltaX -= 72;
 
-        if (deltaX < 0 && deltaX > -110) {
+        if (deltaX < 0 && deltaX > -95) {
           content.style.transition = 'none';
           content.style.transform = `translateX(${deltaX}px)`;
         }
@@ -461,8 +461,8 @@
 
       mc.on('panend', (e) => {
         content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
-        if (e.deltaX < -40) {
-          content.style.transform = 'translateX(-85px)';
+        if (e.deltaX < -35) {
+          content.style.transform = 'translateX(-72px)';
           content.classList.add('swiped');
           isOpen = true;
           activeOpenContent = content;
