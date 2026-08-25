@@ -75,20 +75,40 @@
       margin: 0 auto;
     }
 
-    .swipe-container {
+    /* Outer Card */
+    .card {
       position: relative;
-      margin-bottom: 12px;
+      background: var(--ios-card-bg);
       border-radius: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
       overflow: hidden;
-      background-color: transparent; /* Fix red subpixel bleed */
+      touch-action: pan-y;
     }
 
-    .delete-swipe-btn {
+    /* Inner main content row */
+    .card-content {
+      position: relative;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--ios-card-bg);
+      z-index: 2;
+      transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.1s ease;
+    }
+
+    .card-content.active {
+      background-color: var(--ios-card-active);
+    }
+
+    /* Revealable Delete Action */
+    .delete-action {
       position: absolute;
       right: 0;
       top: 0;
       bottom: 0;
-      width: 100px;
+      width: 90px;
       background-color: var(--ios-red);
       color: white;
       display: flex;
@@ -98,25 +118,7 @@
       font-size: 15px;
       border: none;
       cursor: pointer;
-      border-radius: 16px; /* Match sister card fully */
-    }
-
-    .card {
-      position: relative;
-      background: var(--ios-card-bg);
-      border-radius: 16px;
-      padding: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-      transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.1s ease;
-      z-index: 2;
-      touch-action: pan-y;
-    }
-
-    .card.active {
-      background-color: var(--ios-card-active);
+      z-index: 1;
     }
 
     .info .name {
@@ -322,12 +324,12 @@
         const formattedDate = localDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
         const dayOfWeek = localDate.toLocaleDateString('it-IT', { weekday: 'long' });
 
-        const wrapper = document.createElement('div');
-        wrapper.className = 'swipe-container';
+        const card = document.createElement('div');
+        card.className = 'card';
 
-        wrapper.innerHTML = `
-          <button class="delete-swipe-btn" onclick="confirmAndDelete(${index})">Elimina</button>
-          <div class="card" id="card-${index}">
+        card.innerHTML = `
+          <button class="delete-action" onclick="confirmAndDelete(${index})">Elimina</button>
+          <div class="card-content" id="content-${index}">
             <div class="info">
               <div class="name">${person.name} ${person.surname}</div>
               <div class="details">${formattedDate} (${dayOfWeek})</div>
@@ -339,14 +341,14 @@
           </div>
         `;
 
-        container.appendChild(wrapper);
-        setupHammerGestures(wrapper.querySelector('.card'), index);
+        container.appendChild(card);
+        setupHammerGestures(card.querySelector('.card-content'), index);
       });
     }
 
-    // Handles swipe and long-press gestures via Hammer.js
-    function setupHammerGestures(card, index) {
-      const mc = new Hammer.Manager(card);
+    // Handles inner content translation revealing background delete action
+    function setupHammerGestures(content, index) {
+      const mc = new Hammer.Manager(content);
       
       const Pan = new Hammer.Pan({ direction: Hammer.DIRECTION_HORIZONTAL, threshold: 10 });
       const Tap = new Hammer.Tap({ event: 'singletap' });
@@ -356,33 +358,34 @@
 
       let isOpen = false;
 
-      // Real-time horizontal pan (swipe) tracking
+      // Real-time horizontal pan tracking
       mc.on('panmove', (e) => {
         let deltaX = e.deltaX;
         if (isOpen) deltaX -= 90;
 
         if (deltaX < 0 && deltaX > -120) {
-          card.style.transition = 'none';
-          card.style.transform = `translateX(${deltaX}px)`;
+          content.style.transition = 'none';
+          content.style.transform = `translateX(${deltaX}px)`;
         }
       });
 
       // Snap action on pan end
       mc.on('panend', (e) => {
-        card.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+        content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
         if (e.deltaX < -45) {
-          card.style.transform = 'translateX(-90px)';
+          content.style.transform = 'translateX(-90px)';
           isOpen = true;
         } else {
-          card.style.transform = 'translateX(0px)';
+          content.style.transform = 'translateX(0px)';
           isOpen = false;
         }
       });
 
-      // Single tap: closes swipe if open, ignores standard click otherwise
+      // Single tap: closes swipe if open
       mc.on('singletap', () => {
         if (isOpen) {
-          card.style.transform = 'translateX(0px)';
+          content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+          content.style.transform = 'translateX(0px)';
           isOpen = false;
         }
       });
@@ -390,7 +393,7 @@
       // Long press exclusively opens edit modal
       mc.on('press', () => {
         if (isOpen) {
-          card.style.transform = 'translateX(0px)';
+          content.style.transform = 'translateX(0px)';
           isOpen = false;
         }
         openModal(index);
