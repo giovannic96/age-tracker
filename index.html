@@ -23,10 +23,24 @@
       --ios-separator: #C6C6C8;
     }
 
-    * {
+    /* Disable selection and system callouts globally */
+    *, *::before, *::after {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none; /* Disables copy/lookup popup on long press */
+      -webkit-user-select: none;   /* iOS Safari */
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
       user-select: none;
+    }
+
+    /* Allow selection only inside editable input fields */
+    input {
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
     }
 
     body {
@@ -317,7 +331,7 @@
       margin-top: 10px;
     }
 
-    /* iOS Native Action Sheet Style for Confirmation */
+    /* Action Sheet Modal Style */
     .action-sheet-container {
       max-width: 600px;
       width: 100%;
@@ -406,7 +420,7 @@
     </div>
   </div>
 
-  <!-- iOS Action Sheet Modal Overlay -->
+  <!-- Action Sheet Overlay -->
   <div class="modal-overlay" id="actionSheetOverlay" onclick="closeActionSheet(event)">
     <div class="action-sheet-container">
       <div class="action-sheet-group">
@@ -615,7 +629,6 @@
       renderList();
     }
 
-    /* iOS Action Sheet Confirmation Handlers */
     function showDeleteActionSheet(index) {
       pendingDeleteIndex = index;
       const personName = people[index].name;
