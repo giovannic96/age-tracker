@@ -83,11 +83,14 @@
       margin-bottom: 14px;
       overflow: hidden;
       touch-action: pan-y;
+      display: flex;
+      align-items: center;
     }
 
     .card-content {
       position: relative;
-      padding: 18px 16px; /* Card più alta */
+      width: 100%;
+      padding: 18px 16px;
       display: flex;
       align-items: center;
       background: var(--ios-card-bg);
@@ -102,7 +105,6 @@
       background-color: var(--ios-card-active);
     }
 
-    /* iOS Avatar Circle larger to fit swipe width */
     .avatar {
       width: 52px;
       height: 52px;
@@ -119,23 +121,26 @@
       letter-spacing: -0.5px;
     }
 
+    /* Small Pill/Ball Delete Button Centered Vertically */
     .delete-action {
       position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      width: 90px;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 56px;
+      width: 76px;
       background-color: var(--ios-red);
       color: white;
       display: flex;
       justify-content: center;
       align-items: center;
       font-weight: 600;
-      font-size: 16px;
+      font-size: 14px;
       border: none;
       cursor: pointer;
-      border-radius: 18px;
+      border-radius: 28px;
       z-index: 1;
+      box-shadow: 0 2px 8px rgba(255, 59, 48, 0.25);
     }
 
     .info {
@@ -143,14 +148,14 @@
     }
 
     .info .name {
-      font-size: 18px; /* Nome leggermente più grande */
+      font-size: 18px;
       font-weight: 600;
       letter-spacing: -0.4px;
       margin-bottom: 4px;
     }
 
     .info .details {
-      font-size: 14px; /* Data più visibile */
+      font-size: 14px;
       color: var(--ios-subtext);
       text-transform: capitalize;
     }
@@ -164,7 +169,7 @@
     }
 
     .age-badge {
-      font-size: 26px; /* Numero età ingrandito */
+      font-size: 26px;
       font-weight: 700;
       color: var(--ios-blue);
       letter-spacing: -0.5px;
@@ -419,9 +424,9 @@
 
       mc.on('panmove', (e) => {
         let deltaX = e.deltaX;
-        if (isOpen) deltaX -= 90;
+        if (isOpen) deltaX -= 84;
 
-        if (deltaX < 0 && deltaX > -120) {
+        if (deltaX < 0 && deltaX > -110) {
           content.style.transition = 'none';
           content.style.transform = `translateX(${deltaX}px)`;
         }
@@ -429,8 +434,8 @@
 
       mc.on('panend', (e) => {
         content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
-        if (e.deltaX < -45) {
-          content.style.transform = 'translateX(-90px)';
+        if (e.deltaX < -40) {
+          content.style.transform = 'translateX(-84px)';
           content.classList.add('swiped');
           isOpen = true;
           activeOpenContent = content;
