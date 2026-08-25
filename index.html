@@ -27,15 +27,14 @@
     *, *::before, *::after {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
-      -webkit-touch-callout: none; /* Disables copy/lookup popup on long press */
-      -webkit-user-select: none;   /* iOS Safari */
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
       -khtml-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
       user-select: none;
     }
 
-    /* Allow selection only inside editable input fields */
     input {
       -webkit-user-select: text;
       -moz-user-select: text;
@@ -149,6 +148,9 @@
       border: none;
       padding: 0;
       cursor: pointer;
+      /* Animazione fluida di transizione per scala ed opacità */
+      transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.25s ease;
+      transform-origin: center right;
     }
 
     .delete-circle-btn {
@@ -436,7 +438,7 @@
     let people = JSON.parse(localStorage.getItem('age_tracker_db') || '[]');
     let currentEditIndex = null;
     let pendingDeleteIndex = null;
-    let activeOpenContent = null;
+    let activeOpenCard = null;
 
     function calculateAge(dobString) {
       if (!dobString) return 0;
@@ -456,18 +458,24 @@
     }
 
     function closeActiveSwipe() {
-      if (activeOpenContent) {
-        activeOpenContent.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
-        activeOpenContent.style.transform = 'translateX(0px)';
-        activeOpenContent.classList.remove('swiped');
-        activeOpenContent = null;
+      if (activeOpenCard) {
+        const { content, deleteBtn } = activeOpenCard;
+        content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
+        content.style.transform = 'translateX(0px)';
+        content.classList.remove('swiped');
+
+        deleteBtn.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.25s ease';
+        deleteBtn.style.transform = 'translateY(-50%) scale(0.3)';
+        deleteBtn.style.opacity = '0';
+
+        activeOpenCard = null;
       }
     }
 
     function renderList() {
       const container = document.getElementById('peopleList');
       container.innerHTML = '';
-      activeOpenContent = null;
+      activeOpenCard = null;
 
       if (people.length === 0) {
         container.innerHTML = '<p style="text-align:center; color:var(--ios-subtext); margin-top:60px;">Nessuna persona inserita.<br>Tocca + in alto per aggiungere.</p>';
@@ -488,7 +496,7 @@
         card.className = 'card';
 
         card.innerHTML = `
-          <button class="delete-action-wrapper" onclick="showDeleteActionSheet(${index})">
+          <button class="delete-action-wrapper" id="delete-btn-${index}" onclick="showDeleteActionSheet(${index})" style="transform: translateY(-50%) scale(0.3); opacity: 0;">
             <div class="delete-circle-btn">
               <svg viewBox="0 0 24 24">
                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
@@ -516,6 +524,7 @@
 
     function setupHammerGestures(content, index) {
       const mc = new Hammer.Manager(content);
+      const deleteBtn = document.getElementById(`delete-btn-${index}`);
       
       const Pan = new Hammer.Pan({ direction: Hammer.DIRECTION_HORIZONTAL, threshold: 10 });
       const Tap = new Hammer.Tap({ event: 'singletap' });
@@ -532,34 +541,50 @@
       content.addEventListener('touchcancel', () => content.classList.remove('active'), { passive: true });
 
       mc.on('panstart', () => {
-        if (activeOpenContent && activeOpenContent !== content) {
+        if (activeOpenCard && activeOpenCard.content !== content) {
           closeActiveSwipe();
         }
       });
 
+      // Real-time Zoom-in effect linked to swipe progression
       mc.on('panmove', (e) => {
         let deltaX = e.deltaX;
         if (isOpen) deltaX -= 72;
 
         if (deltaX < 0 && deltaX > -95) {
           content.style.transition = 'none';
+          deleteBtn.style.transition = 'none';
+
           content.style.transform = `translateX(${deltaX}px)`;
+
+          // Calculate scale progress (0.3 -> 1.0) based on drag distance
+          const progress = Math.min(Math.abs(deltaX) / 72, 1);
+          const scale = 0.3 + (0.7 * progress);
+          
+          deleteBtn.style.transform = `translateY(-50%) scale(${scale})`;
+          deleteBtn.style.opacity = progress;
         }
       });
 
       mc.on('panend', (e) => {
         content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
+        deleteBtn.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.25s ease';
+
         if (e.deltaX < -35) {
           content.style.transform = 'translateX(-72px)';
+          deleteBtn.style.transform = 'translateY(-50%) scale(1)';
+          deleteBtn.style.opacity = '1';
           content.classList.add('swiped');
           isOpen = true;
-          activeOpenContent = content;
+          activeOpenCard = { content, deleteBtn };
         } else {
           content.style.transform = 'translateX(0px)';
+          deleteBtn.style.transform = 'translateY(-50%) scale(0.3)';
+          deleteBtn.style.opacity = '0';
           content.classList.remove('swiped');
           isOpen = false;
-          if (activeOpenContent === content) {
-            activeOpenContent = null;
+          if (activeOpenCard && activeOpenCard.content === content) {
+            activeOpenCard = null;
           }
         }
       });
@@ -568,7 +593,7 @@
         if (isOpen) {
           closeActiveSwipe();
           isOpen = false;
-        } else if (activeOpenContent) {
+        } else if (activeOpenCard) {
           closeActiveSwipe();
         }
       });
