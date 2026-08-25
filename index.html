@@ -101,7 +101,6 @@
       background-color: var(--ios-card-active);
     }
 
-    /* Fully rounded standalone red delete button */
     .delete-action {
       position: absolute;
       right: 0;
@@ -138,12 +137,23 @@
       text-transform: capitalize;
     }
 
+    /* Centered Age Badge Container */
+    .age-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 45px;
+    }
+
     .age-badge {
       font-size: 24px;
       font-weight: 700;
       color: var(--ios-blue);
-      text-align: right;
       letter-spacing: -0.5px;
+      line-height: 1;
+      margin-bottom: 2px;
+      text-align: center;
     }
 
     .age-label {
@@ -152,6 +162,7 @@
       text-transform: uppercase;
       font-weight: 500;
       letter-spacing: 0.5px;
+      text-align: center;
     }
 
     .modal-overlay {
@@ -335,7 +346,7 @@
               <div class="name">${person.name} ${person.surname}</div>
               <div class="details">${formattedDate} (${dayOfWeek})</div>
             </div>
-            <div style="text-align: right;">
+            <div class="age-container">
               <div class="age-badge">${age}</div>
               <div class="age-label">anni</div>
             </div>
