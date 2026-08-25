@@ -80,7 +80,7 @@
       margin-bottom: 12px;
       border-radius: 16px;
       overflow: hidden;
-      background-color: var(--ios-red);
+      background-color: transparent; /* Fix red subpixel bleed */
     }
 
     .delete-swipe-btn {
@@ -88,7 +88,7 @@
       right: 0;
       top: 0;
       bottom: 0;
-      width: 90px;
+      width: 100px;
       background-color: var(--ios-red);
       color: white;
       display: flex;
@@ -98,8 +98,7 @@
       font-size: 15px;
       border: none;
       cursor: pointer;
-      border-top-right-radius: 16px;
-      border-bottom-right-radius: 16px;
+      border-radius: 16px; /* Match sister card fully */
     }
 
     .card {
