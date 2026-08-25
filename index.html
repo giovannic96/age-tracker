@@ -16,7 +16,7 @@
       --ios-red: #FF3B30;
       --ios-bg: #F2F2F7;
       --ios-card-bg: #FFFFFF;
-      --ios-card-active: #E5E5EA; /* Standard iOS active row gray */
+      --ios-card-active: #E5E5EA; /* Standard iOS active/selected gray */
       --ios-text: #000000;
       --ios-subtext: #8E8E93;
       --ios-separator: #C6C6C8;
@@ -97,9 +97,9 @@
       transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease;
     }
 
-    /* iOS Native Active Gray Feedback */
+    /* Active & Swiped Selected State */
     .card-content.active,
-    .card-content:active {
+    .card-content.swiped {
       background-color: var(--ios-card-active);
     }
 
@@ -371,8 +371,10 @@
 
       let isOpen = false;
 
-      // Handle touch state feedback
-      content.addEventListener('touchstart', () => content.classList.add('active'), { passive: true });
+      // Touch active state for quick taps
+      content.addEventListener('touchstart', () => {
+        if (!isOpen) content.classList.add('active');
+      }, { passive: true });
       content.addEventListener('touchend', () => content.classList.remove('active'), { passive: true });
       content.addEventListener('touchcancel', () => content.classList.remove('active'), { passive: true });
 
@@ -391,9 +393,11 @@
         content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
         if (e.deltaX < -45) {
           content.style.transform = 'translateX(-90px)';
+          content.classList.add('swiped'); // Keeps grey background while open
           isOpen = true;
         } else {
           content.style.transform = 'translateX(0px)';
+          content.classList.remove('swiped');
           isOpen = false;
           setTimeout(() => deleteBtn.classList.remove('visible'), 250);
         }
@@ -403,6 +407,7 @@
         if (isOpen) {
           content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
           content.style.transform = 'translateX(0px)';
+          content.classList.remove('swiped');
           isOpen = false;
           setTimeout(() => deleteBtn.classList.remove('visible'), 250);
         }
@@ -411,6 +416,7 @@
       mc.on('press', () => {
         if (isOpen) {
           content.style.transform = 'translateX(0px)';
+          content.classList.remove('swiped');
           isOpen = false;
           deleteBtn.classList.remove('visible');
         }
