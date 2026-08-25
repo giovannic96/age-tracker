@@ -17,6 +17,7 @@
       --ios-bg: #F2F2F7;
       --ios-card-bg: #FFFFFF;
       --ios-card-active: #E5E5EA;
+      --ios-avatar-bg: #E9E9EB;
       --ios-text: #000000;
       --ios-subtext: #8E8E93;
       --ios-separator: #C6C6C8;
@@ -86,9 +87,8 @@
 
     .card-content {
       position: relative;
-      padding: 16px;
+      padding: 14px 16px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
       background: var(--ios-card-bg);
       border-radius: 16px;
@@ -102,7 +102,23 @@
       background-color: var(--ios-card-active);
     }
 
-    /* Fixed persistent delete action */
+    /* iOS Avatar Circle */
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background-color: var(--ios-avatar-bg);
+      color: var(--ios-blue);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 16px;
+      font-weight: 600;
+      margin-right: 14px;
+      flex-shrink: 0;
+      letter-spacing: -0.5px;
+    }
+
     .delete-action {
       position: absolute;
       right: 0;
@@ -120,6 +136,10 @@
       cursor: pointer;
       border-radius: 16px;
       z-index: 1;
+    }
+
+    .info {
+      flex: 1;
     }
 
     .info .name {
@@ -316,6 +336,13 @@
       return age;
     }
 
+    // Generate initials (First letter of Name + First letter of Surname)
+    function getInitials(name, surname) {
+      const firstInitial = name ? name.trim().charAt(0).toUpperCase() : '';
+      const lastInitial = surname && surname.trim() ? surname.trim().charAt(0).toUpperCase() : '';
+      return `${firstInitial}${lastInitial}`;
+    }
+
     function closeActiveSwipe() {
       if (activeOpenContent) {
         activeOpenContent.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
@@ -339,6 +366,7 @@
 
       people.forEach((person, index) => {
         const age = calculateAge(person.birthdate);
+        const initials = getInitials(person.name, person.surname);
         const [y, m, d] = person.birthdate.split('-').map(Number);
         const localDate = new Date(y, m - 1, d);
         const formattedDate = localDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -350,6 +378,7 @@
         card.innerHTML = `
           <button class="delete-action" onclick="confirmAndDelete(${index})">Elimina</button>
           <div class="card-content" id="content-${index}">
+            <div class="avatar">${initials}</div>
             <div class="info">
               <div class="name">${person.name} ${person.surname}</div>
               <div class="details">${formattedDate} (${dayOfWeek})</div>
