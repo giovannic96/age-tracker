@@ -75,7 +75,6 @@
       margin: 0 auto;
     }
 
-    /* Outer Container */
     .card {
       position: relative;
       background: transparent;
@@ -85,7 +84,6 @@
       touch-action: pan-y;
     }
 
-    /* Inner main content row */
     .card-content {
       position: relative;
       padding: 16px;
@@ -103,23 +101,23 @@
       background-color: var(--ios-card-active);
     }
 
-    /* Revealable Delete Action */
+    /* Fully rounded standalone red delete button */
     .delete-action {
       position: absolute;
       right: 0;
       top: 0;
       bottom: 0;
-      width: 90px;
+      width: 85px;
       background-color: var(--ios-red);
       color: white;
-      display: none; /* Completely hidden at rest to stop subpixel bleeds */
+      display: none;
       justify-content: center;
       align-items: center;
       font-weight: 600;
       font-size: 15px;
       border: none;
       cursor: pointer;
-      border-radius: 0 16px 16px 0;
+      border-radius: 16px;
       z-index: 1;
     }
 
@@ -293,13 +291,11 @@
     </div>
   </div>
 
-  <!-- Hammer.js for iOS touch gestures -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
   <script>
     let people = JSON.parse(localStorage.getItem('age_tracker_db') || '[]');
     let currentEditIndex = null;
 
-    // Calculate age avoiding UTC offset issues
     function calculateAge(dobString) {
       if (!dobString) return 0;
       const [birthYear, birthMonth, birthDay] = dobString.split('-').map(Number);
@@ -320,7 +316,6 @@
         return;
       }
 
-      // Sort by birthdate descending (youngest first)
       people.sort((a, b) => b.birthdate.localeCompare(a.birthdate));
 
       people.forEach((person, index) => {
@@ -352,7 +347,6 @@
       });
     }
 
-    // Handles inner content translation revealing background delete action
     function setupHammerGestures(content, index) {
       const mc = new Hammer.Manager(content);
       const deleteBtn = document.getElementById(`delete-btn-${index}`);
@@ -365,7 +359,6 @@
 
       let isOpen = false;
 
-      // Real-time horizontal pan tracking
       mc.on('panmove', (e) => {
         let deltaX = e.deltaX;
         if (isOpen) deltaX -= 90;
@@ -377,7 +370,6 @@
         }
       });
 
-      // Snap action on pan end
       mc.on('panend', (e) => {
         content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
         if (e.deltaX < -45) {
@@ -390,7 +382,6 @@
         }
       });
 
-      // Single tap: closes swipe if open
       mc.on('singletap', () => {
         if (isOpen) {
           content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
@@ -400,7 +391,6 @@
         }
       });
 
-      // Long press exclusively opens edit modal
       mc.on('press', () => {
         if (isOpen) {
           content.style.transform = 'translateX(0px)';
