@@ -16,7 +16,7 @@
       --ios-red: #FF3B30;
       --ios-bg: #F2F2F7;
       --ios-card-bg: #FFFFFF;
-      --ios-card-active: #E5E5EA; /* Standard iOS active/selected gray */
+      --ios-card-active: #E5E5EA;
       --ios-text: #000000;
       --ios-subtext: #8E8E93;
       --ios-separator: #C6C6C8;
@@ -97,7 +97,6 @@
       transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease;
     }
 
-    /* Active & Swiped Selected State */
     .card-content.active,
     .card-content.swiped {
       background-color: var(--ios-card-active);
@@ -307,6 +306,7 @@
   <script>
     let people = JSON.parse(localStorage.getItem('age_tracker_db') || '[]');
     let currentEditIndex = null;
+    let activeOpenCard = null; // Tracks currently swiped open card
 
     function calculateAge(dobString) {
       if (!dobString) return 0;
@@ -319,9 +319,21 @@
       return age;
     }
 
+    function closeActiveSwipe() {
+      if (activeOpenCard) {
+        const { content, deleteBtn } = activeOpenCard;
+        content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
+        content.style.transform = 'translateX(0px)';
+        content.classList.remove('swiped');
+        setTimeout(() => deleteBtn.classList.remove('visible'), 250);
+        activeOpenCard = null;
+      }
+    }
+
     function renderList() {
       const container = document.getElementById('peopleList');
       container.innerHTML = '';
+      activeOpenCard = null;
 
       if (people.length === 0) {
         container.innerHTML = '<p style="text-align:center; color:var(--ios-subtext); margin-top:60px;">Nessuna persona inserita.<br>Tocca + in alto per aggiungere.</p>';
@@ -371,12 +383,18 @@
 
       let isOpen = false;
 
-      // Touch active state for quick taps
       content.addEventListener('touchstart', () => {
         if (!isOpen) content.classList.add('active');
       }, { passive: true });
       content.addEventListener('touchend', () => content.classList.remove('active'), { passive: true });
       content.addEventListener('touchcancel', () => content.classList.remove('active'), { passive: true });
+
+      mc.on('panstart', () => {
+        // Automatically close any previously swiped card
+        if (activeOpenCard && activeOpenCard.content !== content) {
+          closeActiveSwipe();
+        }
+      });
 
       mc.on('panmove', (e) => {
         let deltaX = e.deltaX;
@@ -393,33 +411,31 @@
         content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
         if (e.deltaX < -45) {
           content.style.transform = 'translateX(-90px)';
-          content.classList.add('swiped'); // Keeps grey background while open
+          content.classList.add('swiped');
           isOpen = true;
+          activeOpenCard = { content, deleteBtn, index };
         } else {
           content.style.transform = 'translateX(0px)';
           content.classList.remove('swiped');
           isOpen = false;
+          if (activeOpenCard && activeOpenCard.content === content) {
+            activeOpenCard = null;
+          }
           setTimeout(() => deleteBtn.classList.remove('visible'), 250);
         }
       });
 
       mc.on('singletap', () => {
         if (isOpen) {
-          content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
-          content.style.transform = 'translateX(0px)';
-          content.classList.remove('swiped');
+          closeActiveSwipe();
           isOpen = false;
-          setTimeout(() => deleteBtn.classList.remove('visible'), 250);
+        } else if (activeOpenCard) {
+          closeActiveSwipe();
         }
       });
 
       mc.on('press', () => {
-        if (isOpen) {
-          content.style.transform = 'translateX(0px)';
-          content.classList.remove('swiped');
-          isOpen = false;
-          deleteBtn.classList.remove('visible');
-        }
+        closeActiveSwipe();
         openModal(index);
       });
     }
