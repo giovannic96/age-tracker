@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Age Tracker</title>
 
-  <!-- Favicon & iOS App Icon -->
+  <!-- Standard Favicon for Mobile Browsers -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎂</text></svg>">
-  <link rel="apple-touch-icon" href="https://fav.farm/🎂">
+
+  <!-- Self-Contained iOS Touch Icon for Home Screen (PNG Data URI) -->
+  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAMAAABlApw1AAAAG1BMVEUAAAD///8zMzNKSkpVVVVjY2Nzc3N8fHx3d3e6L0VwAAAACHRSTlMA/////////wBuhs/uAAAC30lEQVR42u3c22LCMBBAUcH//+mFgiKiM0nJmU6XvWlH63gBgpOQ7Nq2bdu2bdu2bdu2bdu2/duumV1uV7ufrx85Vbvp/LheT583y8/1+Xo6v4tXfF3X48uX8357vR6Pz/362m63x/WdG91ub+v9dn3ed5f3vX/kU+1m/TzeNuvr/Xp4fB6fy3a9j3uRj7Xbl+tln9f7dr3s3+v+kUfN/Lje5+3yct0et4d8r9V8er8erufT4/n+v08zfy7718vlfD8/v2f+92jmz2XbLtf3v+f7bOaL/y0EAAAAAAAAAAAAAACAu2b+uOwv08zfmflT/wL0b+T/9S9A/0b+X/8C9G/k//UvQP9G/l//AvRv5P/1L0D/Rv5f/wL0b+T/9S9A/0b+X/8C9G/k//UvQGf959v2+3WzXv9/9d9A/0b+X/8C9G/k//UvQP9G/l//AvRv5P/1L0D/Rv5f/wL0b+T/9S9A/0b+X/8C9G/k//UvQP9G/l//AvR/0W333x/M3zTzt5n/TzP/n/7/ZObvZv5P/wL0b+T/9S9A/0b+X/8C9G/k//UvQP9G/l//AvRv5P/1L0D/Rv5f/wL0b+T/9S9A/0b+X/8C9G/k//UvQP/Xzfzhvx/8/x+/zfyfmflLM3/TzP+pmf+rmf+rmf+rmf+r+v/5NPN3M/+v/gXo38j/61+A/o38v/4F6N/I/+tfgP6N/L/+BejfyP/rX4D+jfy//gXo38j/61+A/o38v/4F6N/I/+tfgP6N/L/+Bdh/AAAAgJsG/rrst/4F2L+R/9a/APs38t/6F2D/Rv5b/wLs38h/61+A/Rv5b/0LsH8j/61/AfZv5L/1L8D+jfy3/gXYv5H/1r8A+zfye1P/AvRv5f/1L8D+jfy//gXo38j/61+A/o38v/4F6N/I/+tfgP6N/L/+BejfyP/rX4D+jfy//gXYt23btm3btm3btm3btm3b/sP+AKGfV3N7Sg0iAAAAAElFTkSuQmCC">
 
   <!-- iOS PWA Settings -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,7 +29,6 @@
       --ios-separator: #C6C6C8;
     }
 
-    /* Disable selection and system callouts globally */
     *, *::before, *::after {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
@@ -421,7 +422,6 @@
 
   <main id="peopleList"></main>
 
-  <!-- Add / Edit Modal -->
   <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
     <div class="modal-sheet" id="modalSheet">
       <div class="sheet-header">
@@ -449,7 +449,6 @@
     </div>
   </div>
 
-  <!-- Action Sheet Overlay -->
   <div class="modal-overlay" id="actionSheetOverlay" onclick="closeActionSheet(event)">
     <div class="action-sheet-container">
       <div class="action-sheet-group">
