@@ -23,7 +23,6 @@
       --ios-separator: #C6C6C8;
     }
 
-    /* Disable selection and system callouts globally */
     *, *::before, *::after {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
@@ -148,7 +147,6 @@
       border: none;
       padding: 0;
       cursor: pointer;
-      /* Animazione fluida di transizione per scala ed opacità */
       transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.25s ease;
       transform-origin: center right;
     }
@@ -222,7 +220,6 @@
       text-align: center;
     }
 
-    /* Modals & Action Sheet Overlay */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -333,7 +330,6 @@
       margin-top: 10px;
     }
 
-    /* Action Sheet Modal Style */
     .action-sheet-container {
       max-width: 600px;
       width: 100%;
@@ -394,7 +390,6 @@
 
   <main id="peopleList"></main>
 
-  <!-- Add / Edit Modal -->
   <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
     <div class="modal-sheet" id="modalSheet">
       <div class="sheet-header">
@@ -422,7 +417,6 @@
     </div>
   </div>
 
-  <!-- Action Sheet Overlay -->
   <div class="modal-overlay" id="actionSheetOverlay" onclick="closeActionSheet(event)">
     <div class="action-sheet-container">
       <div class="action-sheet-group">
@@ -526,7 +520,7 @@
       const mc = new Hammer.Manager(content);
       const deleteBtn = document.getElementById(`delete-btn-${index}`);
       
-      const Pan = new Hammer.Pan({ direction: Hammer.DIRECTION_HORIZONTAL, threshold: 10 });
+      const Pan = new Hammer.Pan({ direction: Hammer.DIRECTION_HORIZONTAL, threshold: 5 });
       const Tap = new Hammer.Tap({ event: 'singletap' });
       const Press = new Hammer.Press({ time: 500 });
 
@@ -546,18 +540,16 @@
         }
       });
 
-      // Real-time Zoom-in effect linked to swipe progression
       mc.on('panmove', (e) => {
         let deltaX = e.deltaX;
         if (isOpen) deltaX -= 72;
 
-        if (deltaX < 0 && deltaX > -95) {
+        if (deltaX <= 0 && deltaX >= -95) {
           content.style.transition = 'none';
           deleteBtn.style.transition = 'none';
 
           content.style.transform = `translateX(${deltaX}px)`;
 
-          // Calculate scale progress (0.3 -> 1.0) based on drag distance
           const progress = Math.min(Math.abs(deltaX) / 72, 1);
           const scale = 0.3 + (0.7 * progress);
           
@@ -566,11 +558,15 @@
         }
       });
 
-      mc.on('panend', (e) => {
+      // Unified Snap Resolution Logic (Handles release & gesture cancellation)
+      const handleSnapEnd = (e) => {
         content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease';
         deleteBtn.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.25s ease';
 
-        if (e.deltaX < -35) {
+        const velocitySnap = e.velocityX < -0.3;
+        const distanceSnap = e.deltaX < -25;
+
+        if (velocitySnap || distanceSnap) {
           content.style.transform = 'translateX(-72px)';
           deleteBtn.style.transform = 'translateY(-50%) scale(1)';
           deleteBtn.style.opacity = '1';
@@ -587,7 +583,9 @@
             activeOpenCard = null;
           }
         }
-      });
+      };
+
+      mc.on('panend pancancel', handleSnapEnd);
 
       mc.on('singletap', () => {
         if (isOpen) {
